@@ -1,0 +1,19 @@
+[project]
+name = "ttftouv"
+version = "0.1.0"
+description = "a simple library to read ttf files and return character as either array of points in uv space or convert them into an image"
+authors = [
+    {name = "Anatoliy Dudar", email = "gigsollt@gmail.com"},
+]
+dependencies = []
+requires-python = ">=3.13"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+distribution = true
