@@ -16,7 +16,7 @@ class TTFReader:
             for i in range(STARTFROM, self.num_tables * 16, 16)
         ]
 
-    def create_cmap(self):
+    def create_cmap(self) -> CMap:
         cmap_dir: TableDirectory | None = None
         for dir in self.font_dirs:
             if dir.tag == "cmap":
@@ -28,4 +28,4 @@ class TTFReader:
         end = start + cmap_dir.length
 
         cmap = CMap(self.font_data[start:end])
-        print(cmap.n_subtables)
+        return cmap
