@@ -1,4 +1,4 @@
-from ttftouv.CMap import CMap
+from ttftouv.CMap import CMap, CmapSubtable
 from ttftouv.TableDirectory import TableDirectory
 from ttftouv.helpers import bytes_to_uint
 
@@ -6,14 +6,16 @@ from ttftouv.helpers import bytes_to_uint
 class TTFReader:
     def __init__(self, font_data: bytes) -> None:
         self.font_data: bytes = font_data
-        self.num_tables: int = bytes_to_uint(self.font_data[4:6])[0]
-        self.font_dirs: list[TableDirectory] = self.read_font_dirs()
 
-    def read_font_dirs(self) -> list[TableDirectory]:
+        num_tables: int = bytes_to_uint(self.font_data[4:6])[0]
+        self.font_dirs: list[TableDirectory] = self.read_font_dirs(num_tables)
+        self.cmap_unicode: CmapSubtable = self.create_cmap().utf_subtable
+
+    def read_font_dirs(self, n_tables: int) -> list[TableDirectory]:
         STARTFROM = 12  # length of offset tables
         return [
-            TableDirectory(self.font_data[i : i + 16])
-            for i in range(STARTFROM, self.num_tables * 16, 16)
+            TableDirectory(self.font_data[i : i + 16], self.font_data)
+            for i in range(STARTFROM, n_tables * 16, 16)
         ]
 
     def create_cmap(self) -> CMap:
@@ -24,8 +26,5 @@ class TTFReader:
         if cmap_dir is None:
             raise ValueError("Font file is corrupt, cmap is missing")
 
-        start = cmap_dir.offset
-        end = start + cmap_dir.length
-
-        cmap = CMap(self.font_data[start:end])
+        cmap = CMap(cmap_dir.table_data)
         return cmap

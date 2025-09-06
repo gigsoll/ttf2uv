@@ -2,15 +2,16 @@ from ttftouv.helpers import bytes_to_uint, bytes_to_chars
 
 
 class TableDirectory:
-    def __init__(self, byte_data: bytes) -> None:
-        if len(byte_data) != 16:
-            print(len(byte_data), byte_data)
+    def __init__(self, header: bytes, font_data: bytes) -> None:
+        if len(header) != 16:
+            print(len(header), header)
             raise ValueError("Wrong size of table directory")
 
-        self.tag: str = bytes_to_chars(byte_data[0:4])
-        self.check_sum: bytes = byte_data[4:8]
-        self.offset: int = bytes_to_uint(byte_data[8:12])[0]
-        self.length: int = bytes_to_uint(byte_data[12:16])[0]
+        offset: int = bytes_to_uint(header[8:12])[0]
+        length: int = bytes_to_uint(header[12:16])[0]
+
+        self.tag: str = bytes_to_chars(header[0:4])
+        self.table_data = font_data[offset : offset + length]
 
     def __repr__(self) -> str:
-        return f"TableDirectory(tag = {self.tag}, offset={self.offset}, length={self.length})"
+        return f"TableDirectory(tag = {self.tag}, {self.table_data})"

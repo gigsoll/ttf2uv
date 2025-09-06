@@ -1,8 +1,7 @@
-import re
 from ttftouv.helpers import bytes_to_uint
 
 
-class Subtable:
+class CmapSubtable:
     def __init__(self, binary_data: bytes) -> None:
         self.binary_data: bytes = binary_data
 
@@ -29,7 +28,7 @@ class SubtableFormat4Constants:
         self.glyf_index_array_len = glyf_index_array_len
 
 
-class SubtableFormat4(Subtable):
+class SubtableFormat4(CmapSubtable):
     def __init__(self, binary_data: bytes):
         super(SubtableFormat4, self).__init__(binary_data)
 
@@ -124,13 +123,13 @@ class SubtableFormat4(Subtable):
         )
 
 
-class SubtableFormat12(Subtable): ...
+class SubtableFormat12(CmapSubtable): ...
 
 
 class CMap:
     def __init__(self, binary_data: bytes) -> None:
         self.n_subtables: int = bytes_to_uint(binary_data[2:4])[0]
-        self.utf_subtable: Subtable
+        self.utf_subtable: CmapSubtable
         subtables_start = 4
         subtables_end = (
             subtables_start + self.n_subtables * 8
