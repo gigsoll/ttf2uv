@@ -1,3 +1,4 @@
+from ttftouv.Table import Table
 from ttftouv.helpers import bytes_to_uint
 
 
@@ -126,7 +127,7 @@ class SubtableFormat4(CmapSubtable):
 class SubtableFormat12(CmapSubtable): ...
 
 
-class CMap:
+class CMapTable(Table):
     def __init__(self, binary_data: bytes) -> None:
         self.n_subtables: int = bytes_to_uint(binary_data[2:4])[0]
         self.utf_subtable: CmapSubtable

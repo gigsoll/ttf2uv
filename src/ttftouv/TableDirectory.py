@@ -1,17 +1,18 @@
-from ttftouv.helpers import bytes_to_uint, bytes_to_chars
+from ttftouv.CMapTable import CMapTable
+from ttftouv.GlyfTable import GlyfTable
+from ttftouv.HeadTable import HeadTable
+from ttftouv.Table import Table
 
 
-class TableDirectory:
-    def __init__(self, header: bytes, font_data: bytes) -> None:
-        if len(header) != 16:
-            print(len(header), header)
-            raise ValueError("Wrong size of table directory")
-
-        offset: int = bytes_to_uint(header[8:12])[0]
-        length: int = bytes_to_uint(header[12:16])[0]
-
-        self.tag: str = bytes_to_chars(header[0:4])
-        self.table_data = font_data[offset : offset + length]
-
-    def __repr__(self) -> str:
-        return f"TableDirectory(tag = {self.tag}, {self.table_data})"
+class TableDirectoryFactory:
+    @staticmethod
+    def create_table(tag: str, table_data: bytes) -> Table:
+        match tag:
+            case "cmap":
+                return CMapTable(table_data)
+            case "glyf":
+                return GlyfTable(table_data)
+            case "head":
+                return HeadTable(table_data)
+            case _:
+                raise NotImplementedError("This table type is not supported")

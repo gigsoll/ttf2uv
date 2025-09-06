@@ -1,6 +1,7 @@
-from ttftouv.CMap import CMap, CmapSubtable
-from ttftouv.TableDirectory import TableDirectory
-from ttftouv.helpers import bytes_to_uint
+from ttftouv.CMapTable import CMapTable, CmapSubtable
+from ttftouv.Glyf import Glyf
+from ttftouv.TableDirectory import Table, TableDirectoryFactory
+from ttftouv.helpers import bytes_to_uint, bytes_to_chars
 
 
 class TTFReader:
@@ -8,23 +9,39 @@ class TTFReader:
         self.font_data: bytes = font_data
 
         num_tables: int = bytes_to_uint(self.font_data[4:6])[0]
-        self.font_dirs: list[TableDirectory] = self.read_font_dirs(num_tables)
-        self.cmap_unicode: CmapSubtable = self.create_cmap().utf_subtable
+        self.font_dirs: list[Table] = self.read_font_dirs(num_tables)
+        self.cmap_unicode: CmapSubtable = self.get_cmap().utf_subtable
+        self.glyfs: list[Glyf] = []
+        print(self.cmap_unicode)
 
-    def read_font_dirs(self, n_tables: int) -> list[TableDirectory]:
+    def read_font_dirs(self, n_tables: int) -> list[Table]:
         STARTFROM = 12  # length of offset tables
-        return [
-            TableDirectory(self.font_data[i : i + 16], self.font_data)
-            for i in range(STARTFROM, n_tables * 16, 16)
-        ]
+        font_dirs: list[Table] = []
+        for i in range(STARTFROM, n_tables * 16, 16):
+            header = self.font_data[i : i + 16]
+            offset: int = bytes_to_uint(header[8:12])[0]
+            length: int = bytes_to_uint(header[12:16])[0]
 
-    def create_cmap(self) -> CMap:
-        cmap_dir: TableDirectory | None = None
-        for dir in self.font_dirs:
-            if dir.tag == "cmap":
-                cmap_dir = dir
-        if cmap_dir is None:
-            raise ValueError("Font file is corrupt, cmap is missing")
+            tag: str = bytes_to_chars(header[0:4])
+            table_data = self.font_data[offset : offset + length]
 
-        cmap = CMap(cmap_dir.table_data)
-        return cmap
+            try:
+                font_dirs.append(TableDirectoryFactory.create_table(tag, table_data))
+            except NotImplementedError:
+                print(f"{tag} is not implemented")
+
+        return font_dirs
+
+    def get_cmap(self) -> CMapTable:
+        return [dir for dir in self.font_dirs if isinstance(dir, CMapTable)][0]
+
+
+if __name__ == "__main__":
+    from os import path, environ
+
+    font_dir = path.join(str(environ.get("HOME")), ".fonts")
+    font_name = "Roboto-Regular.ttf"
+    font_loc = path.join(font_dir, font_name)
+
+    with open(font_loc, "rb") as ttf:
+        font = TTFReader(ttf.read())
