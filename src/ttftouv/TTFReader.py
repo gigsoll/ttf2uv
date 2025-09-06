@@ -1,5 +1,5 @@
-from ttftouv.CMapTable import CMapTable, CmapSubtable
-from ttftouv.Glyf import Glyf
+from ttftouv.cmap.CMapTable import CMapTable, CmapSubtable
+from ttftouv.glyf.Glyf import Glyf
 from ttftouv.TableDirectory import Table, TableDirectoryFactory
 from ttftouv.helpers import bytes_to_uint, bytes_to_chars
 

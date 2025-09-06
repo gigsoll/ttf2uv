@@ -1,5 +1,5 @@
-from ttftouv.CMapTable import CMapTable
-from ttftouv.GlyfTable import GlyfTable
+from ttftouv.cmap.CMapTable import CMapTable
+from ttftouv.glyf.GlyfTable import GlyfTable
 from ttftouv.HeadTable import HeadTable
 from ttftouv.Table import Table
 
