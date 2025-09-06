@@ -7,18 +7,17 @@ from ttftouv.cmap.CmapSubtable import CmapSubtable
 
 class CMapTable(Table):
     def __init__(self, binary_data: bytes) -> None:
-        self.n_subtables: int = bytes_to_uint(binary_data[2:4])[0]
+        self.n_subtables: int = bytes_to_uint(binary_data[2:4])
         self.utf_subtable: CmapSubtable
         subtables_start = 4
         subtables_end = (
             subtables_start + self.n_subtables * 8
         )  # bc each subtable deffinition contains 8 bytes of data
         for i in range(subtables_start, subtables_end, 8):
-            platform, platform_version, offset = bytes_to_uint(
-                binary_data[i : i + 2],
-                binary_data[i + 2 : i + 4],
-                binary_data[i + 4 : i + 8],
-            )
+            platform = bytes_to_uint(binary_data[i : i + 2])
+            platform_version = bytes_to_uint(binary_data[i + 2 : i + 4])
+            offset = bytes_to_uint(binary_data[i + 4 : i + 8])
+
             if (platform, platform_version) in [(0, 3), (3, 1)]:
                 """
                 0, 3 – Unicode Basic Multilingual Plane (BMP)

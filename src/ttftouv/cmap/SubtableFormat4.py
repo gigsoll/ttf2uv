@@ -8,7 +8,7 @@ class SubtableFormat4(CmapSubtable):
     def __init__(self, binary_data: bytes):
         super(SubtableFormat4, self).__init__(binary_data)
 
-        length: int = bytes_to_uint(self.binary_data[2:4])[0]  # UINT16, 2nd field
+        length: int = bytes_to_uint(self.binary_data[2:4])  # UINT16, 2nd field
         self.binary_data = self.binary_data[:length]
         constants: SubtableFormat4Constants = self._prepare_constants()
 
@@ -29,7 +29,7 @@ class SubtableFormat4(CmapSubtable):
         )
 
     def map_character(self, character: bytes) -> int:
-        char_int = bytes_to_uint(character)[0]
+        char_int = bytes_to_uint(character)
 
         end_index: int = 0
         for i, end_code in enumerate(self.end_codes):
@@ -67,7 +67,7 @@ class SubtableFormat4(CmapSubtable):
         if intem_size is None:
             intem_size = 2
         return [
-            bytes_to_uint(self.binary_data[i : i + 2])[0]
+            bytes_to_uint(self.binary_data[i : i + 2])
             for i in range(start_from, start_from + length * 2, 2)
         ]  # each element of the array is UINT16
 
@@ -75,9 +75,9 @@ class SubtableFormat4(CmapSubtable):
         endcodes_start: int = 14
 
         seg_count: int = int(
-            bytes_to_uint(self.binary_data[6:8])[0] / 2
+            bytes_to_uint(self.binary_data[6:8]) / 2
         )  # bc stores SegCountX2, UINT16, language skipped
-        length: int = bytes_to_uint(self.binary_data[2:4])[0]  # UINT16, 2nd field
+        length: int = bytes_to_uint(self.binary_data[2:4])  # UINT16, 2nd field
 
         array_length: int = seg_count * 2
         start_codes_start: int = (

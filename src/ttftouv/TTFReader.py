@@ -8,7 +8,7 @@ class TTFReader:
     def __init__(self, font_data: bytes) -> None:
         self.font_data: bytes = font_data
 
-        num_tables: int = bytes_to_uint(self.font_data[4:6])[0]
+        num_tables: int = bytes_to_uint(self.font_data[4:6])
         self.font_dirs: list[Table] = self.read_font_dirs(num_tables)
         self.cmap_unicode: CmapSubtable = self.get_cmap().utf_subtable
         self.glyfs: list[Glyf] = []
@@ -19,8 +19,8 @@ class TTFReader:
         font_dirs: list[Table] = []
         for i in range(STARTFROM, n_tables * 16, 16):
             header = self.font_data[i : i + 16]
-            offset: int = bytes_to_uint(header[8:12])[0]
-            length: int = bytes_to_uint(header[12:16])[0]
+            offset: int = bytes_to_uint(header[8:12])
+            length: int = bytes_to_uint(header[12:16])
 
             tag: str = bytes_to_chars(header[0:4])
             table_data = self.font_data[offset : offset + length]
