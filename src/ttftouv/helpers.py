@@ -13,7 +13,7 @@ def bytes_to_int(byte_data: bytes):
 
 def _validate_bytes(byte_data: bytes, valid_sizes: tuple[int, ...]):
     if len(byte_data) not in valid_sizes:
-        raise ValueError("Wrong size of bytes chunk")
+        raise ValueError(f"Wrong size of bytes chunk, {byte_data}")
 
 
 def bytes_to_chars(byte_data: bytes) -> str:
