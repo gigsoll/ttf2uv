@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from ttftouv.helpers import bytes_to_int, bytes_to_uint, read_int_array
 from collections import Counter
+from pprint import pprint
 
 
 @dataclass
@@ -25,7 +26,7 @@ class SimpleGlyf(Glyf):
 
         # properties
         self.n_points: int = 0
-        self.flags: list[str] = []
+        self.flags: list[list[int]] = []
         self.points: list[Point] = []
         self.end_points_ids: list[int] = []
         self.lenth: int = 0
@@ -46,32 +47,30 @@ class SimpleGlyf(Glyf):
         self.flags = self.read_flags(glyf_data[flags_start:])
 
         x_coords_start = flags_start + len(self.flags)
-        flag_offset_mapping: dict[str, int] = {"0": 2, "1": 1}
+        flag_offset_mapping: dict[int, int] = {0: 2, 1: 1}
         x_coords_end: int = x_coords_start + self._count_flags_offset(
             1, flag_offset_mapping
         )
-        x_coords: list[int] = self.parce_coordinates(
+        x_coords, x_len = self.parce_coordinates(
             glyf_data[x_coords_start:x_coords_end], "x"
         )
 
-        y_coords_end: int = x_coords_end + self._count_flags_offset(
-            2, flag_offset_mapping
-        )
-        y_coords: list[int] = self.parce_coordinates(
-            glyf_data[x_coords_end:y_coords_end], "y"
-        )
+        x_coords_end = x_coords_start + x_len
+
+        y_coords_end = x_coords_end + self._count_flags_offset(2, flag_offset_mapping)
+        y_coords, _ = self.parce_coordinates(glyf_data[x_coords_end:y_coords_end], "y")
 
         self.points = self.create_points(x_coords, y_coords)
 
-    def read_flags(self, data: bytes) -> list[str]:
-        flags: list[str] = []
+    def read_flags(self, data: bytes) -> list[list[int]]:
+        flags: list[list[int]] = []
         count, cur = 0, 0
         while count < self.n_points:
             repeat = 0
-            bin_flag: str = self._byte_int_to_int(data[cur])
+            bin_flag: list[int] = self._byte_int_to_int(data[cur], 8)
             flags.append(bin_flag)
             count += 1
-            if bin_flag[3] == "1":
+            if bin_flag[3] == 1:
                 repeat = data[cur + 1]
                 flags.extend([bin_flag] * repeat)
                 count += repeat
@@ -92,13 +91,13 @@ class SimpleGlyf(Glyf):
             result.append(point)
         return result
 
-    def parce_coordinates(self, data: bytes, axis: str) -> list[int]:
+    def parce_coordinates(self, data: bytes, axis: str) -> tuple[list[int], int]:
         """
         Takes binary data, read set coordinates using flags
         """
         check_flags: tuple[
             int, int
-        ]  # first flag for short/long, second – positive/negative if short
+        ]  # first flag for short/long, second – positive/negative if short an repeat or not if not short
         match axis:
             case "x":
                 check_flags = (1, 4)
@@ -109,21 +108,36 @@ class SimpleGlyf(Glyf):
 
         coordinates: list[int] = []
         cur_byte = 0
-        for flag in self.flags:
-            if flag[check_flags[0]] != "1":
-                coordinates.append(bytes_to_int(data[cur_byte : cur_byte + 2]))
-                cur_byte += 2
-                continue
+        for i, flag in enumerate(self.flags):
+            is_short_vector: bool = bool(int(flag[check_flags[0]]))
+            is_same_or_positive: bool = bool(int(flag[check_flags[1]]))
 
-            cur_byte += 1
-            coord = data[cur_byte]
-            if flag[check_flags[1]] == "1":
-                coord *= -1
+            pprint(
+                f"{ flag= }  { check_flags= }  { is_short_vector=  }  { is_same_or_positive= }  "
+            )
+
+            if is_short_vector:
+                coord = data[cur_byte]
+                is_positive = is_same_or_positive
+                if not is_positive:
+                    coord = coord * -1
+                cur_byte += 1
+            else:
+                is_same = is_same_or_positive
+                if not is_same:
+                    coord = bytes_to_int(data[cur_byte : cur_byte + 2])
+                    cur_byte += 2
+                else:
+                    # TODO check later
+                    coord = coordinates[i - 1]
+            print(coord)
+            if i != 0 and not is_same_or_positive:
+                coord = coordinates[i - 1] + coord
             coordinates.append(coord)
+        print(coordinates)
+        return coordinates, cur_byte
 
-        return coordinates
-
-    def _count_flags_offset(self, index: int, mapping: dict[str, int]) -> int:
+    def _count_flags_offset(self, index: int, mapping: dict[int, int]) -> int:
         flags_count = Counter([flag[index] for flag in self.flags])
         result = 0
         for key, value in mapping.items():
@@ -131,15 +145,8 @@ class SimpleGlyf(Glyf):
         return result
 
     @staticmethod
-    def _byte_int_to_int(integer: int, endian: str = "little") -> str:
-        if not 0 <= integer <= 255:
+    def _byte_int_to_int(value: int, length: int) -> list[int]:
+        if not 0 <= value <= 255:
             raise ValueError("Integer must be 1 byte sized")
 
-        bin_int = bin(integer)[2:]
-        if len(bin_int) < 8:
-            len_dif: int = 8 - len(bin_int)
-            bin_int = "0" * len_dif + bin_int
-
-        if endian == "little":
-            bin_int = bin_int[::-1]
-        return bin_int
+        return [(value >> i) & 1 for i in range(length)]
