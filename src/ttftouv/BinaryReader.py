@@ -44,7 +44,7 @@ class BinaryReader:
             int.from_bytes(self.data[i : i + type_size], signed=signed)
             for i in range(
                 self.cur_byte - array_size,
-                self.cur_byte + (n_items * type_size),
+                self.cur_byte,
                 type_size,
             )
         ]
