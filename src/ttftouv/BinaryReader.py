@@ -16,6 +16,12 @@ class BinaryReader:
             self.data[self.cur_byte - 2 : self.cur_byte], signed=False
         )
 
+    def read_uint32(self) -> int:
+        self.skip_bytes(4)
+        return int.from_bytes(
+            self.data[self.cur_byte - 4 : self.cur_byte], signed=False
+        )
+
     def read_uint8(self) -> int:
         self.skip_bytes(1)
         return self.data[self.cur_byte - 1]

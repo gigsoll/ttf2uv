@@ -8,6 +8,7 @@ test_data = (
     b"\x00\x01\x00\x0a\xff\xf6"  # array for int16
     b"\xff\xff\x00\x00\x00\x17"  # array for uint16
     b"\xff\x10\x01"  # array for uint8
+    b"\xff\xff\xff\xf0\x00\x00\x00\x10"
 )
 
 br = BinaryReader(test_data)
@@ -36,3 +37,8 @@ def test_read_array():
     assert br.read_int_array(3, "int16") == [1, 10, -10]
     assert br.read_int_array(3, "uint16") == [65535, 0, 23]
     assert br.read_int_array(3, "uint8") == [255, 16, 1]
+
+
+def test_read_uint32():
+    assert br.read_uint32() == 4294967280
+    assert br.read_uint32() == 16
