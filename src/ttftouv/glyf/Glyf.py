@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from ttftouv.helpers import bytes_to_int, bytes_to_uint, read_int_array
 from collections import Counter
 from pprint import pprint
+
+from ttftouv.BinaryReader import BinaryReader
 
 
 @dataclass
@@ -13,16 +14,17 @@ class Point:
 
 
 class Glyf:
-    def __init__(self, glyf_data: bytes) -> None:
-        self.n_contours: int = bytes_to_int(glyf_data[0:2])
-        self.bountding_box: tuple[int, ...] = tuple(
-            read_int_array(glyf_data, 2, 4, signed=True)
-        )
+    def __init__(self, id: int, glyf_data: bytes) -> None:
+        br: BinaryReader = BinaryReader(glyf_data)
+        self.id = id
+        self.n_contours: int = br.read_int16()
+        self.bountding_box: tuple[int, ...] = tuple(br.read_int_array(4, "int16"))
 
 
 class SimpleGlyf(Glyf):
-    def __init__(self, glyf_data: bytes) -> None:
-        super().__init__(glyf_data)
+    def __init__(self, id: int, glyf_data: bytes) -> None:
+        super().__init__(id, glyf_data)
+        br: BinaryReader = BinaryReader(glyf_data)
 
         # properties
         self.n_points: int = 0
@@ -32,50 +34,34 @@ class SimpleGlyf(Glyf):
         self.lenth: int = 0
 
         SIMPLE_GLYF_DATA_START = 10  # bc base Glyf have 5 properties each 2bytes
-        self.end_points_ids: list[int] = read_int_array(
-            glyf_data, SIMPLE_GLYF_DATA_START, self.n_contours
-        )
+        self.end_points_ids: list[int] = br.read_int_array(self.n_contours, "uint16")
         self.n_points = self.end_points_ids[-1] + 1
 
         # skip instructions, for now, just calculating bytes offset
-        instructions_start = SIMPLE_GLYF_DATA_START + 2 * self.n_contours
-        n_instructions: int = bytes_to_uint(
-            glyf_data[instructions_start : instructions_start + 2]
-        )
-        flags_start = instructions_start + 2 + n_instructions
+        n_instructions = br.read_uint16()
+        br.skip_bytes(n_instructions)
 
-        self.flags = self.read_flags(glyf_data[flags_start:])
+        self.flags = self.read_flags(br)
+        print(self.flags)
 
-        x_coords_start = flags_start + len(self.flags)
-        flag_offset_mapping: dict[int, int] = {0: 2, 1: 1}
-        x_coords_end: int = x_coords_start + self._count_flags_offset(
-            1, flag_offset_mapping
-        )
-        x_coords, x_len = self.parce_coordinates(
-            glyf_data[x_coords_start:x_coords_end], "x"
-        )
+        x_coords: list[int] = self.parce_coordinates(br, "x")
 
-        x_coords_end = x_coords_start + x_len
-
-        y_coords_end = x_coords_end + self._count_flags_offset(2, flag_offset_mapping)
-        y_coords, _ = self.parce_coordinates(glyf_data[x_coords_end:y_coords_end], "y")
+        y_coords = self.parce_coordinates(br, "y")
 
         self.points = self.create_points(x_coords, y_coords)
 
-    def read_flags(self, data: bytes) -> list[list[int]]:
+    def read_flags(self, reader: BinaryReader) -> list[list[int]]:
         flags: list[list[int]] = []
-        count, cur = 0, 0
+        count = 0
         while count < self.n_points:
             repeat = 0
-            bin_flag: list[int] = self._byte_int_to_int(data[cur], 8)
+            bin_flag: list[int] = self._byte_int_to_int(reader.read_uint8(), 8)
             flags.append(bin_flag)
             count += 1
             if bin_flag[3] == 1:
-                repeat = data[cur + 1]
+                repeat = reader.read_uint8()
                 flags.extend([bin_flag] * repeat)
                 count += repeat
-                cur += 1
-            cur += 1
         return flags
 
     def create_points(self, x_coords: list[int], y_coords: list[int]) -> list[Point]:
@@ -91,7 +77,7 @@ class SimpleGlyf(Glyf):
             result.append(point)
         return result
 
-    def parce_coordinates(self, data: bytes, axis: str) -> tuple[list[int], int]:
+    def parce_coordinates(self, reader: BinaryReader, axis: str) -> list[int]:
         """
         Takes binary data, read set coordinates using flags
         """
@@ -107,7 +93,6 @@ class SimpleGlyf(Glyf):
                 raise ValueError("Coordinate should be x or y")
 
         coordinates: list[int] = []
-        cur_byte = 0
         for i, flag in enumerate(self.flags):
             is_short_vector: bool = bool(int(flag[check_flags[0]]))
             is_same_or_positive: bool = bool(int(flag[check_flags[1]]))
@@ -117,16 +102,14 @@ class SimpleGlyf(Glyf):
             )
 
             if is_short_vector:
-                coord = data[cur_byte]
+                coord = reader.read_uint8()
                 is_positive = is_same_or_positive
                 if not is_positive:
                     coord = coord * -1
-                cur_byte += 1
             else:
                 is_same = is_same_or_positive
                 if not is_same:
-                    coord = bytes_to_int(data[cur_byte : cur_byte + 2])
-                    cur_byte += 2
+                    coord = reader.read_int16()
                 else:
                     # TODO check later
                     coord = coordinates[i - 1]
@@ -135,7 +118,7 @@ class SimpleGlyf(Glyf):
                 coord = coordinates[i - 1] + coord
             coordinates.append(coord)
         print(coordinates)
-        return coordinates, cur_byte
+        return coordinates
 
     def _count_flags_offset(self, index: int, mapping: dict[int, int]) -> int:
         flags_count = Counter([flag[index] for flag in self.flags])
