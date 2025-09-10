@@ -28,12 +28,13 @@ class SimpleGlyf(Glyf):
 
         # properties
         self.n_points: int = 0
-        self.flags: list[list[int]] = []
+        self.flags: list[int] = []
         self.points: list[Point] = []
         self.end_points_ids: list[int] = []
         self.lenth: int = 0
 
         SIMPLE_GLYF_DATA_START = 10  # bc base Glyf have 5 properties each 2bytes
+        br.skip_bytes(SIMPLE_GLYF_DATA_START)
         self.end_points_ids: list[int] = br.read_int_array(self.n_contours, "uint16")
         self.n_points = self.end_points_ids[-1] + 1
 
@@ -42,25 +43,23 @@ class SimpleGlyf(Glyf):
         br.skip_bytes(n_instructions)
 
         self.flags = self.read_flags(br)
-        print(self.flags)
 
         x_coords: list[int] = self.parce_coordinates(br, "x")
-
         y_coords = self.parce_coordinates(br, "y")
 
         self.points = self.create_points(x_coords, y_coords)
 
-    def read_flags(self, reader: BinaryReader) -> list[list[int]]:
-        flags: list[list[int]] = []
+    def read_flags(self, reader: BinaryReader) -> list[int]:
+        flags: list[int] = []
         count = 0
         while count < self.n_points:
             repeat = 0
-            bin_flag: list[int] = self._byte_int_to_int(reader.read_uint8(), 8)
-            flags.append(bin_flag)
+            flag: int = reader.read_uint8()
+            flags.append(flag)
             count += 1
-            if bin_flag[3] == 1:
+            if self.get_flag(flag, 3):
                 repeat = reader.read_uint8()
-                flags.extend([bin_flag] * repeat)
+                flags.extend([flag] * repeat)
                 count += repeat
         return flags
 
@@ -73,7 +72,7 @@ class SimpleGlyf(Glyf):
             else:
                 x = x_coords[i - 1] + x_coords[i]
                 y = y_coords[i - 1] + y_coords[i]
-            point = Point(i, x, y, True if self.flags[i][0] == "1" else False)
+            point = Point(i, x, y, self.get_flag(self.flags[i], 0))
             result.append(point)
         return result
 
@@ -94,8 +93,8 @@ class SimpleGlyf(Glyf):
 
         coordinates: list[int] = []
         for i, flag in enumerate(self.flags):
-            is_short_vector: bool = bool(int(flag[check_flags[0]]))
-            is_same_or_positive: bool = bool(int(flag[check_flags[1]]))
+            is_short_vector: bool = self.get_flag(flag, check_flags[0])
+            is_same_or_positive: bool = self.get_flag(flag, check_flags[1])
 
             pprint(
                 f"{ flag= }  { check_flags= }  { is_short_vector=  }  { is_same_or_positive= }  "
@@ -120,16 +119,16 @@ class SimpleGlyf(Glyf):
         print(coordinates)
         return coordinates
 
-    def _count_flags_offset(self, index: int, mapping: dict[int, int]) -> int:
-        flags_count = Counter([flag[index] for flag in self.flags])
-        result = 0
-        for key, value in mapping.items():
-            result += flags_count[key] * value
-        return result
-
     @staticmethod
-    def _byte_int_to_int(value: int, length: int) -> list[int]:
-        if not 0 <= value <= 255:
-            raise ValueError("Integer must be 1 byte sized")
-
-        return [(value >> i) & 1 for i in range(length)]
+    def get_flag(flags: int, flag_id: int) -> bool:
+        masks: dict[int, int] = {
+            0: 0x01,
+            1: 0x02,
+            2: 0x04,
+            3: 0x08,
+            4: 0x10,
+            5: 0x20,
+            6: 0x40,
+            7: 0x80,
+        }
+        return flags & masks[flag_id] != 0
