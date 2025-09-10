@@ -5,7 +5,7 @@ description = "a simple library to read ttf files and return character as either
 authors = [
     {name = "Anatoliy Dudar", email = "gigsollt@gmail.com"},
 ]
-dependencies = []
+dependencies = ["bitarray>=3.7.1"]
 requires-python = ">=3.13"
 readme = "README.md"
 license = {text = "MIT"}

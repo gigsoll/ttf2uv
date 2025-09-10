@@ -1,5 +1,6 @@
 from ttftouv.cmap.CMapTable import CMapTable, CmapSubtable
-from ttftouv.glyf.Glyf import Glyf
+from ttftouv.glyf.GlyfTable import GlyfTable
+from ttftouv.glyf.Glyf import Glyf, SimpleGlyf
 from ttftouv.TableDirectory import Table, TableDirectoryFactory
 from ttftouv.helpers import bytes_to_uint, bytes_to_chars
 
@@ -32,16 +33,27 @@ class TTFReader:
 
         return font_dirs
 
+    def read_simple_glif(self) -> SimpleGlyf:
+        return SimpleGlyf(
+            [dir for dir in self.font_dirs if isinstance(dir, GlyfTable)][0].table_data[
+                :800
+            ]
+        )
+
     def get_cmap(self) -> CMapTable:
         return [dir for dir in self.font_dirs if isinstance(dir, CMapTable)][0]
 
 
 if __name__ == "__main__":
     from os import path, environ
+    from pprint import pprint
 
     font_dir = path.join(str(environ.get("HOME")), ".fonts")
-    font_name = "Roboto-Regular.ttf"
+    font_name = "JetBrainsMonoNLNerdFont-Regular.ttf"
     font_loc = path.join(font_dir, font_name)
 
     with open(font_loc, "rb") as ttf:
         font = TTFReader(ttf.read())
+
+    pprint(font.read_simple_glif().points)
+    pprint(font.read_simple_glif().flags)

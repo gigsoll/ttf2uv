@@ -5,7 +5,30 @@
 groups = ["default"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:25be0b667e0cf0dc05e225ec01419a59c3ac027f7aaa0b6c0420e6d8c8522ed0"
+content_hash = "sha256:a42ed29a898da3ed191d1f51885400eb1ebcae3c203ae02fa7a2d2837433534b"
 
 [[metadata.targets]]
 requires_python = ">=3.13"
+
+[[package]]
+name = "bitarray"
+version = "3.7.1"
+summary = "efficient arrays of booleans -- C extension"
+groups = ["default"]
+files = [
+    {file = "bitarray-3.7.1-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:e62892645f6a214eefb58a42c3ed2501af2e40a797844e0e09ec1e400ce75f3d"},
+    {file = "bitarray-3.7.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:3092f6bbf4a75b1e6f14a5b1030e27c435f341afeb23987115e45a25cc68ba91"},
+    {file = "bitarray-3.7.1-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:851398428f5604c53371b72c5e0a28163274264ada4a08cd1eafe65fde1f68d0"},
+    {file = "bitarray-3.7.1-cp313-cp313-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:fa05460dc4f57358680b977b4a254d331b24c8beb501319b998625fd6a22654b"},
+    {file = "bitarray-3.7.1-cp313-cp313-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:9ad0df7886cb9d6d2ff75e87d323108a0e32bdca5c9918071681864129ce8ea8"},
+    {file = "bitarray-3.7.1-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:55c31bc3d2c9e48741c812ee5ce4607c6f33e33f339831c214d923ffc7777d21"},
+    {file = "bitarray-3.7.1-cp313-cp313-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:44f468fb4857fff86c65bec5e2fb67067789e40dad69258e9bb78fc6a6df49e7"},
+    {file = "bitarray-3.7.1-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:340c524c7c934b61d1985d805bffe7609180fb5d16ece6ce89b51aa535b936f2"},
+    {file = "bitarray-3.7.1-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:0751596f60f33df66245b2dafa3f7fbe13cb7ac91dd14ead87d8c2eec57cb3ed"},
+    {file = "bitarray-3.7.1-cp313-cp313-musllinux_1_2_ppc64le.whl", hash = "sha256:e501bd27c795105aaba02b5212ecd1bb552ca2ee2ede53e5a8cb74deee0e2052"},
+    {file = "bitarray-3.7.1-cp313-cp313-musllinux_1_2_s390x.whl", hash = "sha256:fe2493d3f49e314e573022ead4d8c845c9748979b7eb95e815429fe947c4bde2"},
+    {file = "bitarray-3.7.1-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:1f1575cc0f66aa70a0bb5cb57c8d9d1b7d541d920455169c6266919bf804dc20"},
+    {file = "bitarray-3.7.1-cp313-cp313-win32.whl", hash = "sha256:da3dfd2776226e15d3288a3a24c7975f9ee160ba198f2efa66bc28c5ba76d792"},
+    {file = "bitarray-3.7.1-cp313-cp313-win_amd64.whl", hash = "sha256:33f604bffd06b170637f8a48ddcf42074ed1e1980366ac46058e065ce04bfe2a"},
+    {file = "bitarray-3.7.1.tar.gz", hash = "sha256:795b1760418ab750826420ae24f06f392c08e21dc234f0a369a69cc00444f8ec"},
+]
