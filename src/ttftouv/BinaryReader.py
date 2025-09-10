@@ -16,7 +16,7 @@ class BinaryReader:
             self.data[self.cur_byte - 2 : self.cur_byte], signed=False
         )
 
-    def read_int8(self) -> int:
+    def read_uint8(self) -> int:
         self.skip_bytes(1)
         return self.data[self.cur_byte - 1]
 
@@ -27,13 +27,13 @@ class BinaryReader:
         )
 
     def read_int_array(
-        self, n_items: int, type: Literal["uint16", "int16", "int8"]
+        self, n_items: int, type: Literal["uint16", "int16", "uint8"]
     ) -> list[int]:
         type_size = 0
         match type:
             case "int16" | "uint16":
                 type_size = 2
-            case "int8":
+            case "uint8":
                 type_size = 1
         array_size = n_items * type_size
         self.skip_bytes(array_size)
