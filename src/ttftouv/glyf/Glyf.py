@@ -66,12 +66,8 @@ class SimpleGlyf(Glyf):
     def create_points(self, x_coords: list[int], y_coords: list[int]) -> list[Point]:
         result = []
         for i in range(len(x_coords)):
-            if i == 0:
-                x = x_coords[i]
-                y = y_coords[i]
-            else:
-                x = x_coords[i - 1] + x_coords[i]
-                y = y_coords[i - 1] + y_coords[i]
+            x = x_coords[i]
+            y = y_coords[i]
             point = Point(i, x, y, self.get_flag(self.flags[i], 0))
             result.append(point)
         return result
@@ -92,43 +88,29 @@ class SimpleGlyf(Glyf):
                 raise ValueError("Coordinate should be x or y")
 
         coordinates: list[int] = []
+        prev = self.bountding_box[0] if axis == "x" else self.bountding_box[1]
         for i, flag in enumerate(self.flags):
             is_short_vector: bool = self.get_flag(flag, check_flags[0])
             is_same_or_positive: bool = self.get_flag(flag, check_flags[1])
 
-            pprint(
-                f"{ flag= }  { check_flags= }  { is_short_vector=  }  { is_same_or_positive= }  "
-            )
-
-            if is_short_vector:
-                coord = reader.read_uint8()
-                is_positive = is_same_or_positive
-                if not is_positive:
-                    coord = coord * -1
-            else:
-                is_same = is_same_or_positive
-                if not is_same:
+            match (is_short_vector, is_same_or_positive):
+                case (True, True):
+                    coord = reader.read_uint8()
+                case (True, False):
+                    coord = -reader.read_uint8()
+                case (False, True):
+                    coord = prev
+                case (False, False):
                     coord = reader.read_int16()
-                else:
-                    # TODO check later
-                    coord = coordinates[i - 1]
-            print(coord)
+
             if i != 0 and not is_same_or_positive:
                 coord = coordinates[i - 1] + coord
             coordinates.append(coord)
-        print(coordinates)
+            prev = coord
+
+        print(coordinates, min(coordinates), max(coordinates))
         return coordinates
 
     @staticmethod
     def get_flag(flags: int, flag_id: int) -> bool:
-        masks: dict[int, int] = {
-            0: 0x01,
-            1: 0x02,
-            2: 0x04,
-            3: 0x08,
-            4: 0x10,
-            5: 0x20,
-            6: 0x40,
-            7: 0x80,
-        }
-        return flags & masks[flag_id] != 0
+        return flags & 2**flag_id != 0
